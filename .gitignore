@@ -1,0 +1,12 @@
+/.env
+/config/*.local.php
+/vendor/
+.idea/
+.vscode/
+.DS_Store
+*.log
+*.lock
+*.bak
+*.tmp
+node_modules/
+composer.lock
