@@ -3,12 +3,16 @@
     "grpc/grpc": "^1.57",
     "google/protobuf": "^4.31",
     "insectaio/common": "^1.0",
-    "insectaio/barqouq": "^1.0",
+    "insectaio/barqouq": "dev-master",
     "vlucas/phpdotenv": "^5.6"
   },
   "autoload": {
     "psr-4": {
-      "App\\": "src/"
+      "App\\": "src/",
+      "Barqouq\\Shopfront\\Order\\": "vendor/insectaio/barqouq/generated/barqouq_php/Barqouq/Shopfront/Order/",
+      "Barqouq\\Shopfront\\Location\\": "vendor/insectaio/barqouq/generated/barqouq_php/Barqouq/Shopfront/Location/",
+      "Barqouq\\Shared\\": "vendor/insectaio/barqouq/generated/barqouq_php/Barqouq/Shared/",
+      "Insecta\\Common\\": "vendor/insectaio/common/generated/common_php/Insecta/Common/"
     }
   }
 }
