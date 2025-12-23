@@ -42,6 +42,10 @@ Open http://localhost:8000/home
 docker-compose up --build
 ```
 
+## AWS ECS deploy (starter)
+
+There is a starter script for pushing the image to ECR and updating an existing ECS Fargate service. See deploy/aws/ecs/README.md for required environment and steps.
+
 ## Notes
 
 - Requires PHP with grpc and protobuf extensions
