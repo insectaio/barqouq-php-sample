@@ -4,7 +4,7 @@ set -euo pipefail
 # Minimal ECS deploy helper for barqouq-php-sample
 # Prereqs: AWS CLI v2, Docker
 
-ROOT_DIR="$(cd "$(dirname "$0")/../../" && pwd)"
+ROOT_DIR="$(cd "$(dirname "$0")/../../../" && pwd)"
 TPL_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 : "${AWS_REGION:?need AWS_REGION}"
@@ -16,7 +16,8 @@ TPL_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 IMAGE_TAG="${IMAGE_TAG:-latest}"
 IMAGE_URI="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${IMAGE_TAG}"
-TASK_FAMILY="${ECS_TASK_FAMILY:-barqouq-php-sample}"
+ECS_TASK_FAMILY="${ECS_TASK_FAMILY:-barqouq-php-sample}"
+ECS_TASK_ROLE_ARN="${ECS_TASK_ROLE_ARN:-${ECS_EXECUTION_ROLE_ARN}}"
 
 # Optional env
 APP_ENV="${APP_ENV:-production}"
@@ -37,8 +38,12 @@ echo "Logging in to ECR..."
 aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
 if [[ "${AWS_CREATE_ECR:-false}" == "true" ]]; then
-  aws ecr describe-repositories --repository-names "$ECR_REPO" --region "$AWS_REGION" >/dev/null 2>&1 || \
-    aws ecr create-repository --repository-name "$ECR_REPO" --region "$AWS_REGION" >/dev/null
+  aws ecr describe-repositories --repository-names "$ECR_REPO" --region "$AWS_REGION" >/dev/null 2>&1 || {
+    aws ecr create-repository --repository-name "$ECR_REPO" --region "$AWS_REGION" >/dev/null 2>&1 || {
+      echo "Failed to create ECR repository \"$ECR_REPO\" in region \"$AWS_REGION\"" >&2
+      exit 1
+    }
+  }
 fi
 
 echo "Building image ${IMAGE_URI}..."
@@ -49,13 +54,15 @@ docker push "$IMAGE_URI"
 
 # Render task definition
 echo "Rendering task definition..."
-export IMAGE_URI APP_ENV APP_URL BARQOUQ_GRPC_HOST BARQOUQ_GRPC_TLS BARQOUQ_SECRET_KEY BARQOUQ_SUBDOMAIN ECS_LOG_GROUP AWS_REGION ECS_TASK_ROLE_ARN ECS_EXECUTION_ROLE_ARN ECS_TASK_FAMILY TASK_FAMILY
-envsubst < "$TPL_DIR/taskdef.json.tpl" > "$TPL_DIR/taskdef.json"
+export IMAGE_URI APP_ENV APP_URL BARQOUQ_GRPC_HOST BARQOUQ_GRPC_TLS BARQOUQ_SECRET_KEY BARQOUQ_SUBDOMAIN ECS_LOG_GROUP AWS_REGION ECS_TASK_ROLE_ARN ECS_EXECUTION_ROLE_ARN ECS_TASK_FAMILY
+TASKDEF_JSON="$(mktemp)"
+trap 'rm -f "$TASKDEF_JSON"' EXIT
+envsubst < "$TPL_DIR/taskdef.json.tpl" > "$TASKDEF_JSON"
 
 # Register new task definition
 echo "Registering task definition..."
 NEW_TASK_DEF_ARN=$(aws ecs register-task-definition \
-  --cli-input-json "file://$TPL_DIR/taskdef.json" \
+  --cli-input-json "file://$TASKDEF_JSON" \
   --query 'taskDefinition.taskDefinitionArn' --output text)
 
 echo "Updating service ${ECS_SERVICE} on cluster ${ECS_CLUSTER} to ${NEW_TASK_DEF_ARN}..."

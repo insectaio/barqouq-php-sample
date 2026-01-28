@@ -17,8 +17,7 @@ AWS_ACCOUNT_ID=123456789012
 ECR_REPO=barqouq-php-sample
 ECS_CLUSTER=your-ecs-cluster
 ECS_SERVICE=your-ecs-service
-AWS_VPC_SUBNETS="subnet-aaa,subnet-bbb"   # used only if service creation is needed
-AWS_SECURITY_GROUPS="sg-12345"            # used only if service creation is needed
+ECS_EXECUTION_ROLE_ARN=arn:aws:iam::123456789012:role/ecsTaskExecutionRole
 BARQOUQ_GRPC_HOST=api.barqouq.shop:443
 BARQOUQ_GRPC_TLS=true
 BARQOUQ_SECRET_KEY=replace-with-secret
@@ -29,6 +28,7 @@ Optional:
 - `IMAGE_TAG` (defaults to `latest`)
 - `AWS_CREATE_ECR=true` to auto-create the ECR repo if missing
 - `APP_ENV=production` and `APP_URL` for framework awareness (not strictly required)
+- `ECS_TASK_ROLE_ARN` (defaults to `ECS_EXECUTION_ROLE_ARN` if not set)
 
 ## Deploy steps
 ```

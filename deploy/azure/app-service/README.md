@@ -11,7 +11,6 @@ This is a minimal, opinionated starter to build/push the PHP demo image to Azure
 Export before running `deploy.sh`:
 
 ```
-AZURE_SUBSCRIPTION_ID=your-subscription-id
 AZURE_RESOURCE_GROUP=your-resource-group
 AZURE_REGISTRY_URL=myregistry.azurecr.io
 AZURE_REGISTRY_NAME=myregistry
@@ -37,8 +36,8 @@ cd deploy/azure/app-service
 What it does:
 1) Builds the Docker image from repo root.
 2) Logs in to ACR and pushes the image.
-3) Updates App Service to use the new image (via app settings or redeploy).
-4) Polls app health.
+3) Updates the App Service Linux container configuration to use the new image in ACR (via `az webapp config container set`).
+4) Restarts the App Service to apply changes.
 
 ## Notes
 - For production use, prefer Managed Identity or Azure Key Vault for secrets instead of inline env vars.
