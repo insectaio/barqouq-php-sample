@@ -2,9 +2,24 @@
 
 Minimal demo of a PHP shopfront that talks to Barqouq over gRPC.
 
-## Quick start
+## Installation
 
-1) Install dependencies
+```bash
+composer require insectaio/barqouq:^1.0
+```
+
+Or add to your `composer.json`:
+
+```json
+{
+  "require": {
+    "insectaio/barqouq": "^1.0",
+    "insectaio/common": "^1.0"
+  }
+}
+```
+
+Then install:
 
 ```bash
 composer install
