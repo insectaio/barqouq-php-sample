@@ -10,3 +10,4 @@
 *.tmp
 node_modules/
 composer.lock
+/deploy/aws/ecs/taskdef.json

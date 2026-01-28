@@ -4,9 +4,8 @@ set -euo pipefail
 # Minimal Azure App Service deploy helper for barqouq-php-sample
 # Prereqs: Azure CLI
 
-ROOT_DIR="$(cd "$(dirname "$0")/../../" && pwd)"
+ROOT_DIR="$(cd "$(dirname "$0")/../../../" && pwd)"
 
-: "${AZURE_SUBSCRIPTION_ID:?need AZURE_SUBSCRIPTION_ID}"
 : "${AZURE_RESOURCE_GROUP:?need AZURE_RESOURCE_GROUP}"
 : "${AZURE_REGISTRY_URL:?need AZURE_REGISTRY_URL}"
 : "${AZURE_REGISTRY_NAME:?need AZURE_REGISTRY_NAME}"
@@ -45,20 +44,28 @@ az acr build \
   "$ROOT_DIR"
 
 echo "Updating App Service ${AZURE_APP_SERVICE_NAME}..."
-# Update app settings (environment variables)
+# Update app settings (environment variables) via a secure temporary file to avoid
+# exposing sensitive values (such as BARQOUQ_SECRET_KEY and registry passwords)
+# in process listings or shell history.
+APPSETTINGS_FILE="$(mktemp)"
+trap 'rm -f "$APPSETTINGS_FILE"' EXIT
+chmod 600 "${APPSETTINGS_FILE}"
+cat > "${APPSETTINGS_FILE}" <<EOF
+BARQOUQ_GRPC_HOST=${BARQOUQ_GRPC_HOST}
+BARQOUQ_GRPC_TLS=${BARQOUQ_GRPC_TLS}
+BARQOUQ_SECRET_KEY=${BARQOUQ_SECRET_KEY}
+BARQOUQ_SUBDOMAIN=${BARQOUQ_SUBDOMAIN}
+APP_ENV=${APP_ENV}
+APP_URL=${APP_URL}
+DOCKER_REGISTRY_SERVER_URL=https://${AZURE_REGISTRY_URL}
+DOCKER_REGISTRY_SERVER_USERNAME=${AZURE_REGISTRY_USERNAME}
+DOCKER_REGISTRY_SERVER_PASSWORD=${AZURE_REGISTRY_PASSWORD}
+EOF
+
 az webapp config appsettings set \
   --name "${AZURE_APP_SERVICE_NAME}" \
   --resource-group "${AZURE_RESOURCE_GROUP}" \
-  --settings \
-    BARQOUQ_GRPC_HOST="${BARQOUQ_GRPC_HOST}" \
-    BARQOUQ_GRPC_TLS="${BARQOUQ_GRPC_TLS}" \
-    BARQOUQ_SECRET_KEY="${BARQOUQ_SECRET_KEY}" \
-    BARQOUQ_SUBDOMAIN="${BARQOUQ_SUBDOMAIN}" \
-    APP_ENV="${APP_ENV}" \
-    APP_URL="${APP_URL}" \
-    DOCKER_REGISTRY_SERVER_URL="https://${AZURE_REGISTRY_URL}" \
-    DOCKER_REGISTRY_SERVER_USERNAME="${AZURE_REGISTRY_USERNAME}" \
-    DOCKER_REGISTRY_SERVER_PASSWORD="${AZURE_REGISTRY_PASSWORD}"
+  --settings @"${APPSETTINGS_FILE}"
 
 # Configure Docker container settings
 az webapp config container set \
