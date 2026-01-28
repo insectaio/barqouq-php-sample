@@ -2,7 +2,9 @@
 
 Minimal demo of a PHP shopfront that talks to Barqouq over gRPC.
 
-## Quick start
+## Quick Start
+
+This repository already includes Barqouq as a dependency in `composer.json`. To get started:
 
 1) Install dependencies
 
@@ -42,7 +44,30 @@ Open http://localhost:8000/home
 docker-compose up --build
 ```
 
+## AWS ECS deploy (starter)
+
+There is a starter script for pushing the image to ECR and updating an existing ECS Fargate service. See [deploy/aws/ecs/README.md](deploy/aws/ecs/README.md) for required environment and steps.
+
 ## Notes
 
 - Requires PHP with grpc and protobuf extensions
 - This repo is a demo; code and APIs can change
+
+## Integrating Barqouq into your own project
+
+To add Barqouq to your own PHP project, install it via Composer:
+
+```bash
+composer require insectaio/barqouq:^1.0
+```
+
+Or add to your `composer.json`:
+
+```json
+{
+  "require": {
+    "insectaio/barqouq": "^1.0",
+    "insectaio/common": "^1.0"
+  }
+}
+```
