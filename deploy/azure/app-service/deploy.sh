@@ -48,6 +48,7 @@ echo "Updating App Service ${AZURE_APP_SERVICE_NAME}..."
 # exposing sensitive values (such as BARQOUQ_SECRET_KEY and registry passwords)
 # in process listings or shell history.
 APPSETTINGS_FILE="$(mktemp)"
+trap 'rm -f "$APPSETTINGS_FILE"' EXIT
 chmod 600 "${APPSETTINGS_FILE}"
 cat > "${APPSETTINGS_FILE}" <<EOF
 BARQOUQ_GRPC_HOST=${BARQOUQ_GRPC_HOST}
@@ -65,8 +66,6 @@ az webapp config appsettings set \
   --name "${AZURE_APP_SERVICE_NAME}" \
   --resource-group "${AZURE_RESOURCE_GROUP}" \
   --settings @"${APPSETTINGS_FILE}"
-
-rm -f "${APPSETTINGS_FILE}"
 
 # Configure Docker container settings
 az webapp config container set \
